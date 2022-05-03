@@ -7,8 +7,7 @@
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"start": "node dist/index.js",
 		"dev": "nodemon dist/index.js",
-		"lint": "eslint --ext .js,.ts src",
-		"build": "webpack"
+		"lint": "eslint --ext .js,.ts src"
 	},
 	"engines": {
 		"node": "14.18.2"
