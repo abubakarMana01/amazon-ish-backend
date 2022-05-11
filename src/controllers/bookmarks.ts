@@ -4,7 +4,9 @@ import { Request, Response } from "express";
 
 export const getBookmarks = async (req: Request, res: Response) => {
 	try {
-		const bookmarks = await Bookmark.find().populate("bookmark");
+		const bookmarks = await Bookmark.find({ userId: req.user._id }).populate(
+			"bookmark"
+		);
 		res.status(200).json(bookmarks);
 	} catch (err: any) {
 		res.status(500).json({ error: { message: err.message } });
@@ -28,6 +30,7 @@ export const addBookmark = async (req: Request, res: Response) => {
 		// Check if bookmark already exists
 		const bookmarkExists = await Bookmark.findOne({
 			bookmark: { _id: req.body._id },
+			userId: req.user._id,
 		});
 		if (bookmarkExists)
 			return res
@@ -37,6 +40,7 @@ export const addBookmark = async (req: Request, res: Response) => {
 		//Create new bookmark
 		const bookmark = new Bookmark({
 			bookmark: req.body._id,
+			userId: req.user._id,
 		});
 
 		await bookmark.save();

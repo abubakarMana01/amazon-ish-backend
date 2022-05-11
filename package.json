@@ -15,7 +15,8 @@
 	"_moduleAliases": {
 		"@controllers": "dist/controllers",
 		"@routes": "dist/routes",
-		"@models": "dist/models"
+		"@models": "dist/models",
+		"@middlewares": "dist/middlewares"
 	},
 	"keywords": [],
 	"author": "",
@@ -28,7 +29,8 @@
 		"joi": "^17.6.0",
 		"jsonwebtoken": "^8.5.1",
 		"module-alias": "^2.2.2",
-		"mongoose": "^6.3.1"
+		"mongoose": "^6.3.1",
+		"stripe": "^8.222.0"
 	},
 	"devDependencies": {
 		"@types/bcryptjs": "^2.4.2",

@@ -6,6 +6,7 @@ const schema = new mongoose.Schema({
 		ref: "Product",
 		type: mongoose.Schema.Types.ObjectId,
 	},
+	userId: mongoose.Schema.Types.ObjectId,
 });
 
 const Bookmark = mongoose.model("Bookmark", schema);

@@ -12,10 +12,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteItemFromCart = exports.addToCart = exports.getSingleItem = exports.getCart = void 0;
 const cart_1 = require("@models/cart");
 const product_1 = require("@models/product");
+const user_1 = require("@models/user");
 const getCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const cart = yield cart_1.CartItem.find().populate("product");
-        res.status(200).json(cart);
+        const user = yield user_1.User.findById(req.user._id).populate("cart.product");
+        res.status(200).json(user.cart);
     }
     catch (err) {
         res.status(500).json({ error: { message: err.message } });
@@ -25,10 +26,9 @@ const getCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getCart = getCart;
 const getSingleItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const productInCart = yield cart_1.CartItem.findOne({
-            product: { _id: req.params.id },
-        }).populate("product");
-        if (!productInCart) {
+        const user = yield user_1.User.findById(req.user._id);
+        const inCart = user.cart.find((item) => item.product.toString() === req.params.id);
+        if (!inCart) {
             return res.status(200).json({ message: "Not found" });
         }
         else {
@@ -52,22 +52,19 @@ const addToCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const item = yield product_1.Product.findOne({ _id: req.body._id });
         if (!item)
             return res.status(404).json({ error: { message: "Item not found" } });
-        // Check if item already in cart
-        const itemAlreadyInCart = yield cart_1.CartItem.findOne({
-            product: { _id: req.body._id },
-        });
-        if (itemAlreadyInCart) {
-            itemAlreadyInCart.quantity += 1;
-            yield itemAlreadyInCart.save();
-            return res.status(200).json(itemAlreadyInCart);
+        const user = yield user_1.User.findOne({ _id: req.user._id });
+        const itemExistInCart = user.cart.find((item) => item.product.toString() === req.body._id);
+        if (itemExistInCart) {
+            return res
+                .status(400)
+                .json({ error: { message: "Product already in cart" } });
         }
-        // Create new item
-        const cartItem = new cart_1.CartItem({
+        user.cart.push({
             product: req.body._id,
             quantity: req.body.quantity,
         });
-        yield cartItem.save();
-        res.status(201).json(cartItem);
+        yield user.save();
+        res.status(201).json(user.cart);
     }
     catch (err) {
         res.status(500).json({ error: { message: err.message } });
@@ -77,11 +74,18 @@ const addToCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.addToCart = addToCart;
 const deleteItemFromCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const productExists = yield product_1.Product.findOne({ _id: req.params._id });
+        const productExists = yield product_1.Product.findOne({ _id: req.params.id });
         if (!productExists)
             return res.status(404).json({ error: { message: "Item not found" } });
-        const item = yield cart_1.CartItem.deleteOne({ product: { _id: req.params._id } });
-        res.status(200).json(item);
+        const user = yield user_1.User.findById(req.user._id);
+        const inCart = user.cart.find((item) => item.product.toString() === req.params.id);
+        if (!inCart)
+            return res
+                .status(404)
+                .json({ error: { message: "Product not in cart" } });
+        user.cart.id(inCart._id.toString()).remove();
+        const saved = yield user.save();
+        res.status(200).json(saved);
     }
     catch (err) {
         res.status(500).json({ error: { message: err.message } });

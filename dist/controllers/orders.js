@@ -11,12 +11,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addOrder = exports.getOrders = void 0;
 const orders_1 = require("@models/orders");
+const user_1 = require("@models/user");
 const getOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const orders = yield orders_1.Order.find()
-            .populate("products.product")
-            .select("-products._id");
-        res.status(200).json(orders);
+        const user = yield user_1.User.findById(req.user._id).populate("orders.products.product");
+        res.status(200).json(user.orders);
     }
     catch (err) {
         res.status(500).json({ error: { message: err.message } });
@@ -31,12 +30,13 @@ const addOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             return res
                 .status(400)
                 .json({ error: { message: error.details[0].message } });
-        const order = new orders_1.Order({
+        const user = yield user_1.User.findById(req.user._id);
+        user.orders.push(new orders_1.Order({
             paymentMethod: req.body.paymentMethod,
             products: req.body.products,
-        });
-        yield order.save();
-        res.status(201).json(order);
+        }));
+        yield user.save();
+        res.status(201).json(user);
     }
     catch (err) {
         res.status(500).json({ error: { message: err.message } });

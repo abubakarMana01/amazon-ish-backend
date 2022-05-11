@@ -1,11 +1,12 @@
-import { CartItem, validate } from "@models/cart";
+import { validate } from "@models/cart";
 import { Product } from "@models/product";
+import { User } from "@models/user";
 import { Request, Response } from "express";
 
 export const getCart = async (req: Request, res: Response) => {
 	try {
-		const cart = await CartItem.find().populate("product");
-		res.status(200).json(cart);
+		const user = await User.findById(req.user._id).populate("cart.product");
+		res.status(200).json(user.cart);
 	} catch (err: any) {
 		res.status(500).json({ error: { message: err.message } });
 		console.log(err.message);
@@ -14,10 +15,12 @@ export const getCart = async (req: Request, res: Response) => {
 
 export const getSingleItem = async (req: Request, res: Response) => {
 	try {
-		const productInCart = await CartItem.findOne({
-			product: { _id: req.params.id },
-		}).populate("product");
-		if (!productInCart) {
+		const user = await User.findById(req.user._id);
+
+		const inCart = user.cart.find(
+			(item: { product: string }) => item.product.toString() === req.params.id
+		);
+		if (!inCart) {
 			return res.status(200).json({ message: "Not found" });
 		} else {
 			return res.status(200).json({ message: "Found" });
@@ -41,23 +44,22 @@ export const addToCart = async (req: Request, res: Response) => {
 		if (!item)
 			return res.status(404).json({ error: { message: "Item not found" } });
 
-		// Check if item already in cart
-		const itemAlreadyInCart = await CartItem.findOne({
-			product: { _id: req.body._id },
-		});
-		if (itemAlreadyInCart) {
-			itemAlreadyInCart.quantity += 1;
-			await itemAlreadyInCart.save();
-			return res.status(200).json(itemAlreadyInCart);
+		const user = await User.findOne({ _id: req.user._id });
+		const itemExistInCart = user.cart.find(
+			(item: { product: string }) => item.product.toString() === req.body._id
+		);
+		if (itemExistInCart) {
+			return res
+				.status(400)
+				.json({ error: { message: "Product already in cart" } });
 		}
 
-		// Create new item
-		const cartItem = new CartItem({
+		user.cart.push({
 			product: req.body._id,
 			quantity: req.body.quantity,
 		});
-		await cartItem.save();
-		res.status(201).json(cartItem);
+		await user.save();
+		res.status(201).json(user.cart);
 	} catch (err: any) {
 		res.status(500).json({ error: { message: err.message } });
 		console.log(err.message);
@@ -66,13 +68,23 @@ export const addToCart = async (req: Request, res: Response) => {
 
 export const deleteItemFromCart = async (req: Request, res: Response) => {
 	try {
-		const productExists = await Product.findOne({ _id: req.params._id });
+		const productExists = await Product.findOne({ _id: req.params.id });
 		if (!productExists)
 			return res.status(404).json({ error: { message: "Item not found" } });
 
-		const item = await CartItem.deleteOne({ product: { _id: req.params._id } });
+		const user = await User.findById(req.user._id);
+		const inCart = user.cart.find(
+			(item: { product: string }) => item.product.toString() === req.params.id
+		);
 
-		res.status(200).json(item);
+		if (!inCart)
+			return res
+				.status(404)
+				.json({ error: { message: "Product not in cart" } });
+
+		user.cart.id(inCart._id.toString()).remove();
+		const saved = await user.save();
+		res.status(200).json(saved);
 	} catch (err: any) {
 		res.status(500).json({ error: { message: err.message } });
 		console.log(err.message);

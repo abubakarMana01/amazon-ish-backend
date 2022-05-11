@@ -31,4 +31,4 @@ const validate = (order: unknown) => {
 	return schema.validate(order);
 };
 
-export { Order, validate };
+export { Order, validate, schema as ordersSchema };

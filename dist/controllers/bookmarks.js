@@ -14,7 +14,7 @@ const bookmark_1 = require("@models/bookmark");
 const product_1 = require("@models/product");
 const getBookmarks = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const bookmarks = yield bookmark_1.Bookmark.find().populate("bookmark");
+        const bookmarks = yield bookmark_1.Bookmark.find({ userId: req.user._id }).populate("bookmark");
         res.status(200).json(bookmarks);
     }
     catch (err) {
@@ -37,6 +37,7 @@ const addBookmark = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         // Check if bookmark already exists
         const bookmarkExists = yield bookmark_1.Bookmark.findOne({
             bookmark: { _id: req.body._id },
+            userId: req.user._id,
         });
         if (bookmarkExists)
             return res
@@ -45,6 +46,7 @@ const addBookmark = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         //Create new bookmark
         const bookmark = new bookmark_1.Bookmark({
             bookmark: req.body._id,
+            userId: req.user._id,
         });
         yield bookmark.save();
         res.status(201).json(bookmark);

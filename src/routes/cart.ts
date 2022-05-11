@@ -5,14 +5,23 @@ import {
 	getCart,
 	getSingleItem,
 } from "@controllers/cart";
+import auth from "@middlewares/auth";
 const router = Router();
 
-router.get("/", getCart);
+// @desc Get all items in users cart
+// @route GET /cart
+router.get("/", auth, getCart);
 
-router.get("/:id", getSingleItem);
+// @desc Check if an item exists in cart
+// @route GET /cart/:id
+router.get("/:id", auth, getSingleItem);
 
-router.post("/", addToCart);
+// @desc Add an item to users cart
+// @route POST /cart
+router.post("/", auth, addToCart);
 
-router.delete("/:_id", deleteItemFromCart);
+// @desc Delete an item from cart
+// @route DELETE /cart/:id
+router.delete("/:id", auth, deleteItemFromCart);
 
 export default router;

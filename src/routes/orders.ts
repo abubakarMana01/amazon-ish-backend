@@ -1,9 +1,14 @@
 import { addOrder, getOrders } from "@controllers/orders";
+import auth from "@middlewares/auth";
 import { Router } from "express";
 const router = Router();
 
-router.get("/", getOrders);
+// @desc Get all orders
+// @route GET /orders
+router.get("/", auth, getOrders);
 
-router.post("/", addOrder);
+// @desc Add order
+// @route POST /orders
+router.post("/", auth, addOrder);
 
 export default router;

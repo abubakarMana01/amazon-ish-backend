@@ -11,6 +11,7 @@ const schema = new mongoose_1.default.Schema({
         ref: "Product",
         type: mongoose_1.default.Schema.Types.ObjectId,
     },
+    userId: mongoose_1.default.Schema.Types.ObjectId,
 });
 const Bookmark = mongoose_1.default.model("Bookmark", schema);
 exports.Bookmark = Bookmark;

@@ -1,12 +1,14 @@
 import { Order, validate } from "@models/orders";
+import { User } from "@models/user";
 import { Request, Response } from "express";
 
 export const getOrders = async (req: Request, res: Response) => {
 	try {
-		const orders = await Order.find()
-			.populate("products.product")
-			.select("-products._id");
-		res.status(200).json(orders);
+		const user = await User.findById(req.user._id).populate(
+			"orders.products.product"
+		);
+
+		res.status(200).json(user.orders);
 	} catch (err: any) {
 		res.status(500).json({ error: { message: err.message } });
 		console.log(err.message);
@@ -21,13 +23,16 @@ export const addOrder = async (req: Request, res: Response) => {
 				.status(400)
 				.json({ error: { message: error.details[0].message } });
 
-		const order = new Order({
-			paymentMethod: req.body.paymentMethod,
-			products: req.body.products,
-		});
+		const user = await User.findById(req.user._id);
+		user.orders.push(
+			new Order({
+				paymentMethod: req.body.paymentMethod,
+				products: req.body.products,
+			})
+		);
 
-		await order.save();
-		res.status(201).json(order);
+		await user.save();
+		res.status(201).json(user);
 	} catch (err: any) {
 		res.status(500).json({ error: { message: err.message } });
 		console.log(err.message);
