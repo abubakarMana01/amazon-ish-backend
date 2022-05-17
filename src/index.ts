@@ -1,34 +1,29 @@
 import "module-alias/register";
-import express from "express";
-import mongoose from "mongoose";
+import express, { Request } from "express";
 import cors from "cors";
-import authRoute from "@routes/auth";
-import productsRoute from "@routes/products";
-import cartRoutes from "@routes/cart";
-import bookmarksRoutes from "@routes/bookmarks";
-import ordersRoutes from "@routes/orders";
-import paymentRoutes from "@routes/payment";
+import morgan from "morgan";
 import { config } from "dotenv";
 const app = express();
 config();
 
-mongoose
-	.connect(`${process.env.MONGODB_URI}`)
-	.then(() => {
-		console.log("Connected to MongoDB...");
-	})
-	.catch((err) => console.log("Could not connect to MongoDB...", err));
+// Connect to mongoDb
+import dbConnect from "@startup/dbConnect";
+dbConnect();
 
-app.use(express.json());
+// app.use(express.json());
+app.use(
+	express.json({
+		verify: (req: Request, res, buf) => {
+			req.rawBody = buf;
+		},
+	})
+);
 app.use(cors());
+app.use(morgan("dev"));
 
 // Routes
-app.use("/auth", authRoute);
-app.use("/products", productsRoute);
-app.use("/cart", cartRoutes);
-app.use("/bookmarks", bookmarksRoutes);
-app.use("/orders", ordersRoutes);
-app.use("/create-checkout-session", paymentRoutes);
+import routes from "@startup/routes";
+routes(app);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

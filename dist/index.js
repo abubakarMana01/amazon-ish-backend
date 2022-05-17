@@ -5,31 +5,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 require("module-alias/register");
 const express_1 = __importDefault(require("express"));
-const mongoose_1 = __importDefault(require("mongoose"));
 const cors_1 = __importDefault(require("cors"));
-const auth_1 = __importDefault(require("@routes/auth"));
-const products_1 = __importDefault(require("@routes/products"));
-const cart_1 = __importDefault(require("@routes/cart"));
-const bookmarks_1 = __importDefault(require("@routes/bookmarks"));
-const orders_1 = __importDefault(require("@routes/orders"));
-const payment_1 = __importDefault(require("@routes/payment"));
+const morgan_1 = __importDefault(require("morgan"));
 const dotenv_1 = require("dotenv");
 const app = (0, express_1.default)();
 (0, dotenv_1.config)();
-mongoose_1.default
-    .connect(`${process.env.MONGODB_URI}`)
-    .then(() => {
-    console.log("Connected to MongoDB...");
-})
-    .catch((err) => console.log("Could not connect to MongoDB...", err));
-app.use(express_1.default.json());
+// Connect to mongoDb
+const dbConnect_1 = __importDefault(require("@startup/dbConnect"));
+(0, dbConnect_1.default)();
+// app.use(express.json());
+app.use(express_1.default.json({
+    verify: (req, res, buf) => {
+        req.rawBody = buf;
+    },
+}));
 app.use((0, cors_1.default)());
+app.use((0, morgan_1.default)("dev"));
 // Routes
-app.use("/auth", auth_1.default);
-app.use("/products", products_1.default);
-app.use("/cart", cart_1.default);
-app.use("/bookmarks", bookmarks_1.default);
-app.use("/orders", orders_1.default);
-app.use("/create-checkout-session", payment_1.default);
-const PORT = process.env.PORT || 5000;
+const routes_1 = __importDefault(require("@startup/routes"));
+(0, routes_1.default)(app);
+const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
